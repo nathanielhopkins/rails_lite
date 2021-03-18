@@ -2,6 +2,7 @@ require 'active_support'
 require 'active_support/core_ext'
 require 'erb'
 require_relative './session'
+require_relative './flash'
 
 class ControllerBase
   attr_reader :req, :res, :params
@@ -20,22 +21,24 @@ class ControllerBase
   
   # Set the response status code and header
   def redirect_to(url)
-    raise "Cannot double render/redirect" if @already_built_response == true
+    prepare_render_or_redirect
+
     res['Location'] = url
     res.status = 302
-    @already_built_response = true 
-    self.session.store_session(@res)
+
+    nil
   end
   
   # Populate the response with content.
   # Set the response's content type to the given type.
   # Raise an error if the developer tries to double render.
   def render_content(content, content_type)
-    raise "Cannot double render/redirect" if @already_built_response == true
+    prepare_render_or_redirect
+
     res['Content-Type'] = content_type
     res.write(content)
-    @already_built_response = true
-    self.session.store_session(@res)
+
+    nil
   end
 
   # use ERB and binding to evaluate templates
@@ -56,10 +59,23 @@ class ControllerBase
     @session ||= Session.new(@req)
   end
 
+  def flash
+    @flash ||= Flash.new(@req)
+  end
+
   # use this with the router to call action_name (:index, :show, :create...)
   def invoke_action(name)
     send(name)
-    render_content(name) if !self.already_built_response?
+    render(name) if !self.already_built_response?
+  end
+
+  private
+
+  def prepare_render_or_redirect
+    raise "Cannot double render/redirect" if already_built_response?
+    @already_built_response = true
+    self.session.store_session(@res)
+    flash.store_flash(@res)
   end
 end
 
