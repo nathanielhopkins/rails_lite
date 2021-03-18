@@ -11,7 +11,7 @@ class Flash
   end
 
   def [](key)
-    @flash[key]
+    @flash[key.to_s]
   end
 
   def []=(key, value)
@@ -19,5 +19,9 @@ class Flash
   end
 
   def store_flash(res)
+    res.set_cookie(
+      '_rails_lite_app_flash', 
+      { path: '/', value: @flash.to_json}
+    )
   end
 end
