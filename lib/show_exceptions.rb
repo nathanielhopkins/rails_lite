@@ -17,13 +17,14 @@ class ShowExceptions
   end
 
   private
-
+  
   def render_exception(e)
-      @response.status = '500'
-      @response['Content-type'] = 'text/html'
-      @response.body << "RuntimeError"
-      @response.body << e
-      return @response.finish
+    dir_path = File.dirname(__FILE__)
+    template_fname = File.join(dir_path, "templates", "rescue.html.erb")
+    template = File.read(template_fname) 
+    body = ERB.new(template).result(binding)
+    
+    ['500', {'Content-type' => 'text/html'}, body]
   end
 
 end
