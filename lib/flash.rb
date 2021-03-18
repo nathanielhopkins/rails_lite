@@ -11,7 +11,7 @@ class Flash
   end
 
   def [](key)
-    @flash[key.to_s]
+    @flash[key.to_s] || @now[key.to_s]
   end
 
   def []=(key, value)
