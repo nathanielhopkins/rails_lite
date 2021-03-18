@@ -8,6 +8,11 @@ class ShowExceptions
   end
 
   def call(env)
+    begin
+      @app.call(env)
+    rescue => exception
+      render_exception(exception)
+    end
   end
 
   private
