@@ -1,13 +1,13 @@
 require 'json'
 
 class Flash
-  attr_reader :flash
+  attr_reader :now
+
   def initialize(req)
-    if req.cookies["_rails_lite_app_flash"]
-      @flash = JSON.parse(req.cookies['_rails_lite_app_flash'])
-    else
-      @flash = {}
-    end
+    cookie = req.cookies['_rails_lite_app_flash']
+
+    @now = cookie ? JSON.parse(cookie) : {}
+    @flash = {}
   end
 
   def [](key)
