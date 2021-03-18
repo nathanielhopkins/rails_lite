@@ -22,6 +22,7 @@ class ShowExceptions
       @response.status = '500'
       @response['Content-type'] = 'text/html'
       @response.body << "RuntimeError"
+      @response.body << e
       return @response.finish
   end
 
