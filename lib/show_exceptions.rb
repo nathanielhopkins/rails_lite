@@ -19,6 +19,7 @@ class ShowExceptions
   private
   
   def render_exception(e)
+    # does not pass simple specs provided, but does successfully render errors view
     dir_path = File.dirname(__FILE__)
     template_fname = File.join(dir_path, "templates", "rescue.html.erb")
     template = File.read(template_fname) 
