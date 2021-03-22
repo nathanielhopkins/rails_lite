@@ -1,28 +1,29 @@
 require 'rack'
 
 class Static
-  attr_reader :app, :req, :res
-  
+  attr_reader :app, :res
+
   def initialize(app)
     @app = app
     @res = Rack::Response.new
   end
 
   def call(env)
-    dir_path = root_path
-    @res["Content-Type"] = env[1]["Content-Type"]
-    
-    @req = Rack::Request.new(env)
-    #somehow find file from request and set to variable 'content'
-    body = File.read(content)
-    @res.write(body)
+    content = file_path(env)
+    if File.exist?(content)
+      body = File.read(content)
+      @res.write(body)
+    else
+      @res.status = 404
+    end
     @res.finish
   end
-
+  
   private
-  def root_path
+  def file_path(env)
     dir_name = File.dirname(__FILE__)
     root = File.dirname(dir_name)
-    dir_path = File.join(root, "public")
+    file_path = env["PATH_INFO"]
+    content = File.join(root, file_path)
   end
 end
