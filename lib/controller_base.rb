@@ -68,6 +68,14 @@ class ControllerBase
     render(name) if !self.already_built_response?
   end
 
+  # CSRF
+  def form_authenticity_token
+    @res.set_cookie('authenticity_token', "something") if res.headers['Set-Cookie'].nil?
+    cookie_str = res.headers['Set-Cookie']
+    cookie = Rack::Utils.parse_query(cookie_str)
+    cookie['authenticity_token']
+  end
+
   private
 
   def prepare_render_or_redirect
