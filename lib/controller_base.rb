@@ -75,7 +75,7 @@ class ControllerBase
 
   # CSRF
   def form_authenticity_token
-    token = SecureRandom.base64(16)
+    token = @params['authenticity_token'] ?  @params['authenticity_token'] : SecureRandom.base64(16)
     @res.set_cookie('authenticity_token', token) if res.headers['Set-Cookie'].nil?
     cookie_str = res.headers['Set-Cookie']
     cookie = Rack::Utils.parse_query(cookie_str)
@@ -83,7 +83,7 @@ class ControllerBase
   end
 
   def check_authenticity_token
-    controller_token = @params['authenticity_token']
+    controller_token = form_authenticity_token
     request_cookie_str = @req.env["HTTP_COOKIE"]
     request_cookie = Rack::Utils.parse_query(request_cookie_str)
     request_token = request_cookie['authenticity_token']
