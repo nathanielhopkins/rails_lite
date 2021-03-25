@@ -3,6 +3,8 @@ require 'active_support/core_ext'
 require 'erb'
 require_relative './session'
 require_relative './flash'
+require 'rack'
+require 'securerandom'
 
 class ControllerBase
   attr_reader :req, :res, :params
@@ -64,16 +66,33 @@ class ControllerBase
 
   # use this with the router to call action_name (:index, :show, :create...)
   def invoke_action(name)
+    if @protect == true 
+      check_authenticity_token unless @req.request_method == 'GET'
+    end
     send(name)
     render(name) if !self.already_built_response?
   end
 
   # CSRF
   def form_authenticity_token
-    @res.set_cookie('authenticity_token', "something") if res.headers['Set-Cookie'].nil?
+    token = SecureRandom.base64(16)
+    @res.set_cookie('authenticity_token', token) if res.headers['Set-Cookie'].nil?
     cookie_str = res.headers['Set-Cookie']
     cookie = Rack::Utils.parse_query(cookie_str)
     cookie['authenticity_token']
+  end
+
+  def check_authenticity_token
+    controller_token = form_authenticity_token
+    request_cookie_str = @req.env["HTTP_COOKIE"]
+    request_cookie = Rack::Utils.parse_query(request_cookie_str)
+    request_token = request_cookie['authenticity_token']
+
+    raise 'Invalid authenticity token' unless controller_token == request_token
+  end
+
+  def self.protect_from_forgery
+    @protect = true
   end
 
   private
