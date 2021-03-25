@@ -66,7 +66,7 @@ class ControllerBase
 
   # use this with the router to call action_name (:index, :show, :create...)
   def invoke_action(name)
-    if @protect == true 
+    if protect_from_forgery?
       check_authenticity_token unless @req.request_method == 'GET'
     end
     send(name)
@@ -83,7 +83,7 @@ class ControllerBase
   end
 
   def check_authenticity_token
-    controller_token = form_authenticity_token
+    controller_token = @params['authenticity_token']
     request_cookie_str = @req.env["HTTP_COOKIE"]
     request_cookie = Rack::Utils.parse_query(request_cookie_str)
     request_token = request_cookie['authenticity_token']
@@ -92,7 +92,7 @@ class ControllerBase
   end
 
   def self.protect_from_forgery
-    @protect = true
+    @@protect_from_forgery = true
   end
 
   private
@@ -102,6 +102,10 @@ class ControllerBase
     @already_built_response = true
     self.session.store_session(@res)
     flash.store_flash(@res)
+  end
+
+  def protect_from_forgery?
+    @@protect_from_forgery
   end
 end
 
