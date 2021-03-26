@@ -13,7 +13,9 @@ class ControllerBase
   def initialize(req, res, route_params = {})
     @req = req
     @res = res
-    @params = req.params.merge!(route_params)
+    @params = route_params.merge(req.params)
+    @already_built_response = false
+    @@protect_from_forgery ||= false
   end
 
   # Helper method to alias @already_built_response
@@ -75,20 +77,17 @@ class ControllerBase
 
   # CSRF
   def form_authenticity_token
-    token = @params['authenticity_token'] ?  @params['authenticity_token'] : SecureRandom.base64(16)
-    @res.set_cookie('authenticity_token', token) if res.headers['Set-Cookie'].nil?
-    cookie_str = res.headers['Set-Cookie']
-    cookie = Rack::Utils.parse_query(cookie_str)
-    cookie['authenticity_token']
+    @token ||= SecureRandom.hex(16)
+    res.set_cookie('authenticity_token', value: @token, path: '/')
+    # @req.env['HTTP_COOKIE'] = "authenticity_token=#{@token}"
+    # @params['authenticity_token'] = @token
+    @token
   end
 
   def check_authenticity_token
-    controller_token = form_authenticity_token
-    request_cookie_str = @req.env["HTTP_COOKIE"]
-    request_cookie = Rack::Utils.parse_query(request_cookie_str)
-    request_token = request_cookie['authenticity_token']
+    cookie = @req.cookies['authenticity_token']
 
-    raise 'Invalid authenticity token' unless controller_token == request_token
+    raise 'Invalid authenticity token' unless cookie && cookie == self.params['authenticity_token']
   end
 
   def self.protect_from_forgery
